@@ -6,7 +6,7 @@ script "encryptLib"
 --
 -- library of encryption handlers and functions based on revIgniter 2.1.7
 --
--- ¬©2020 revIgniter.com
+-- ¬¨¬©2020 revIgniter.com
 --
 -- Version 1.0.0
 --
@@ -24,31 +24,31 @@ script "encryptLib"
 --
 
 on libraryStack
-  if the short name of the target = the short name of me then
-    -- Put initialization stuff here:
-    _rigSetDefaultValues
+   if the short name of the target = the short name of me then
+      -- Put initialization stuff here:
+      _rigSetDefaultValues
 
-    if the environment is "development" then
-      answer the target & " got libraryStack message"
-    end if
-    --
-  else
-    pass libraryStack
-  end if
+      if the environment is "development" then
+         answer the target & " got libraryStack message"
+      end if
+      --
+   else
+      pass libraryStack
+   end if
 end libraryStack
 
 
 on releaseStack
-  if the short name of the target = the short name of me then
-    -- Put cleanup stuff here:
+   if the short name of the target = the short name of me then
+      -- Put cleanup stuff here:
 
-    if the environment is "development" then
-      answer the target & " got releaseStack message"
-    end if
-    --
-  else
-    pass releaseStack
-  end if
+      if the environment is "development" then
+         answer the target & " got releaseStack message"
+      end if
+      --
+   else
+      pass releaseStack
+   end if
 end releaseStack
 
 
@@ -59,81 +59,16 @@ end releaseStack
 
 --> Declarations
 
-local sScriptLocal = "test"
 local sEncryptA
 
 
 
 --> Handler
 
-/*----------------------------------------------------------------------
---| CONTROL STRUCTURE getprop
---|
---| Author: Trevor DeVore
---| Version:  1.0
---| Created:  2008-10-15
---| Last Mod: --
---| Requires:  --
---|
---| Summary: Access the values of script local variables.
---|
---| Format: put the uScriptLocal["sScriptLocal"] of stack "encryptLib"
---|
---| Parameters: <pVarName>
-----------------------------------------------------------------------*/
-
-getprop uScriptLocal[pVarName]
-	local theDo
-
-	put "return" && pVarName into theDo
-	do theDo
-end uScriptLocal
-
-
 
 
 /*----------------------------------------------------------------------
---| CONTROL STRUCTURE setprop
---|
---| Author: rabit
---| Version:  1.0
---| Created:  2014-04-18
---| Last Mod: --
---| Requires:  --
---|
---| Summary: Set values of script local variables.
---|
---| Format: set the uScriptLocal["sScriptLocal"] of stack "encryptLib" to value
---|
---| Parameters: <pVarName>, <pVal>
-----------------------------------------------------------------------*/
-
-setprop uScriptLocal[pVarName] pVal
-   local tVal, theDo
-
-   # ARRAYS CAN NOT BE USED WITH do
-   # SO, CONVERT THEM TO STRINGS
-   if pVal is an array then
-      put base64Encode(arrayEncode(pVal)) into tVal
-   else
-      put pVal into tVal
-   end if
-
-   put "put" && quote & tVal & quote && "into" && pVarName into theDo
-   do theDo
-
-   # CONVERT THE VALUE OF THE LOCAL VARIABLE TO AN ARRAY AGAIN
-   if pVal is an array then
-      put "put arrayDecode(base64Decode(" & pVarName & ")) into" && pVarName into theDo
-      do theDo
-   end if
-end uScriptLocal
-
-
-
-
-/*----------------------------------------------------------------------
---| COMMAND encryptionErrorHandling
+--| COMMAND rigEncryptErrorHandling
 --|
 --| Author: rabit
 --| Version:  1.1
@@ -144,24 +79,24 @@ end uScriptLocal
 --| Summary: Save or display errors. Calls an optional error handling handler (log)
 --|          which is not included!
 --|
---| Format:  encryptionErrorHandling param1 param2
+--| Format:  rigEncryptErrorHandling param1, [param2]
 --|
---| Parameters: string <pError>, bool <pExit>
+--| Parameters: string <pError>, bool <pExit> (optional)
 --|
 --| Return: empty
 ----------------------------------------------------------------------*/
 
-command encryptionErrorHandling pError pExit
-  try
-    log pError
-  catch e
-    answer error pError
-  end try
+command rigEncryptErrorHandling pError pExit
+   try
+      log pError
+   catch e
+      answer error pError
+   end try
 
-  if pExit is TRUE then
-    exit to top
-  end if
-end encryptionErrorHandling
+   if pExit is TRUE then
+      exit to top
+   end if
+end rigEncryptErrorHandling
 
 
 
@@ -185,9 +120,9 @@ end encryptionErrorHandling
 ----------------------------------------------------------------------*/
 
 private command _rigSetDefaultValues
-  put "SHA-1" into sEncryptA["_hashType"]
-  put "bf" into sEncryptA["cipher"]
-  put 128 into sEncryptA["cipherKeyLength"]
+   put "SHA-1" into sEncryptA["_hashType"]
+   put "bf" into sEncryptA["cipher"]
+   put 128 into sEncryptA["cipherKeyLength"]
 end _rigSetDefaultValues
 
 
@@ -201,36 +136,44 @@ end _rigSetDefaultValues
 --| Version:  1.2
 --| Created: 2009-10-16
 --| Last Mod: 2020-08-04
---| Requires: rigFetchConfigItem(), rigHexDigest()
+--| Requires: rigEncryptErrorHandling, rigHexDigest()
 --|
 --| Summary: Fetch the encryption key. Returns it as md5 or SHA3-256 (depending on LC version)
 --|          in text format as a 32 (64) digit hexadecimal number.
 --|
---| Format:  _rigGetEncryptionKey(param1)
+--| Format:  _rigGetEncryptionKey([param1])
 --|
---| Parameters: string <pKey>
+--| Parameters: string <pKey> (optional)
 --|
 --| Return: string
 ----------------------------------------------------------------------*/
 
 private function _rigGetEncryptionKey pKey
-  if pKey is empty then
-    if sEncryptA["encryptionKey"] is not empty then
-      # KEY SET USING rigSetEncryptionKey
-      return sEncryptA["encryptionKey"]
-    end if
+   if pKey is empty then
+      if sEncryptA["encryptionKey"] is not empty then
+         # RETURN KEY SET USING rigSetEncryptionKey
+         return sEncryptA["encryptionKey"]
+      end if
 
-    ask question "Please enter your encryption key." --------------- desktop / mobile
-    put it into pKey --------------- desktop / mobile
-    -- put rigFetchConfigItem("encryption_key") into pKey --------------- desktop / mobile
-    if pKey is empty then
-      encryptionErrorHandling "In order to use the Encrypt library you need to provide an encryption key.", TRUE
-    end if
-  end if
+      --------------- desktop / mobile
+      ask question "Please enter your encryption key."
+      put it into pKey
+      -- put rigFetchConfigItem("encryption_key") into pKey
+      ---------------
+      if pKey is empty then
+         -- rigShowError "In order to use the Encrypt library requires that you set an encryption key in your config file." --------------- desktop / mobile
+         # ERROR, EXIT TO TOP
+         rigEncryptErrorHandling "In order to use the Encrypt library you need to provide an encryption key.", TRUE
+         --------------- desktop / mobile
+      else
+         put pKey into sEncryptA["encryptionKey"]
+         ---------------
+      end if
+   end if
 
-  put textEncode(pKey, "UTF-8") into pKey
+   put textEncode(pKey, "UTF-8") into pKey
 
-  return rigHexDigest(pKey)
+   return rigHexDigest(pKey)
 end _rigGetEncryptionKey
 
 
@@ -249,7 +192,7 @@ end _rigGetEncryptionKey
 --| Version:  1.1
 --| Created: 2009-10-16
 --| Last Mod: 2020-08-04
---| Requires: --
+--| Requires: rigHexDigest(), rigEncryptErrorHandling
 --|
 --| Summary: Set the encryption key. Undocumented!!!!!!!!!!!
 --|
@@ -261,12 +204,15 @@ end _rigGetEncryptionKey
 ----------------------------------------------------------------------*/
 
 command rigSetEncryptionKey pKey
-  if pKey <> empty then
-    put textEncode(pKey, "UTF-8") into pKey
-    put rigHexDigest(pKey) into sEncryptA["encryptionKey"]
-  else
-    encryptionErrorHandling "No key provided!"
-  end if
+   --------------- desktop / mobile
+   -- put pKey into sEncryptA["encryptionKey"]
+   if pKey <> empty then
+      put textEncode(pKey, "UTF-8") into pKey
+      put rigHexDigest(pKey) into sEncryptA["encryptionKey"]
+   else
+      rigEncryptErrorHandling "No key provided!"
+   end if
+   ---------------
 end rigSetEncryptionKey
 
 
@@ -285,7 +231,7 @@ end rigSetEncryptionKey
 --| Version:  2.1
 --| Created: 2009-10-16
 --| Last Mod: 2020-08-03
---| Requires: _rigGetEncryptionKey(), _rigXorEncode()
+--| Requires: _rigGetEncryptionKey(), _rigXorEncode(), rigEncryptErrorHandling
 --|
 --| Summary: Encodes the message string using bitwise XOR encoding.
 --|          The key is combined with a random hash, and then it
@@ -303,21 +249,24 @@ end rigSetEncryptionKey
 ----------------------------------------------------------------------*/
 
 function rigEncode pString pKey
-  local tKey, tEnc
+   local tKey, tEnc
 
-  put _rigGetEncryptionKey(pKey) into tKey
-  put _rigXorEncode(pString, tKey) into tEnc
+   put _rigGetEncryptionKey(pKey) into tKey
+   put _rigXorEncode(pString, tKey) into tEnc
 
-  if sEncryptA["cipher"] is empty then
-    encryptionErrorHandling "In order to use the Encrypt library you need to provide a cipher.", TRUE
-  end if
+   --------------- desktop / mobile
+   if sEncryptA["cipher"] is empty then
+      # ERROR, EXIT TO TOP
+      rigEncryptErrorHandling "In order to use the Encrypt library you need to provide a cipher.", TRUE
+   end if
+   -----------------------
 
-  encrypt tEnc using sEncryptA["cipher"] with tKey at sEncryptA["cipherKeyLength"] bit
-  if the result is empty then
-    return base64encode(it)
-  end if
+   encrypt tEnc using sEncryptA["cipher"] with tKey at sEncryptA["cipherKeyLength"] bit
+   if the result is empty then
+      return base64encode(it)
+   end if
 
-  return FALSE
+   return FALSE
 end rigEncode
 
 
@@ -347,24 +296,24 @@ end rigEncode
 ----------------------------------------------------------------------*/
 
 function rigDecode pString pKey
-  local tKey, tRegEx, tDec
+   local tKey, tRegEx, tDec
 
-  put _rigGetEncryptionKey(pKey) into tKey
-  -- put "[^a-zA-Z0-9\/\+=]" into tRegEx
-  put "[^a-zA-Z0-9\/\+=" & numToNativeChar(10) & numToNativeChar(13) & "]" into tRegEx
+   put _rigGetEncryptionKey(pKey) into tKey
+   -- put "[^a-zA-Z0-9\/\+=]" into tRegEx
+   put "[^a-zA-Z0-9\/\+=" & numToNativeChar(10) & numToNativeChar(13) & "]" into tRegEx
 
-  if matchtext(pString,tRegEx) is TRUE then
-    return FALSE
-  end if
+   if matchtext(pString,tRegEx) is TRUE then
+      return FALSE
+   end if
 
-  put base64Decode(pString) into tDec
+   put base64Decode(pString) into tDec
 
-  decrypt tDec using sEncryptA["cipher"] with tKey at sEncryptA["cipherKeyLength"] bit
-  if the result is empty then
-    return _rigXorDecode(it, tKey)
-  end if
+   decrypt tDec using sEncryptA["cipher"] with tKey at sEncryptA["cipherKeyLength"] bit
+   if the result is empty then
+      return _rigXorDecode(it, tKey)
+   end if
 
-  return FALSE
+   return FALSE
 end rigDecode
 
 
@@ -395,20 +344,20 @@ end rigDecode
 ----------------------------------------------------------------------*/
 
 private function _rigXorEncode pString pKey
-  local tRand, tStringLength, tRandLength, tEnc
+   local tRand, tStringLength, tRandLength, tEnc
 
-  put rigRandomNum() into tRand
+   put rigRandomNum() into tRand
 
-  put _rigHash(tRand) into tRand
+   put _rigHash(tRand) into tRand
 
-  put length(pString) into tStringLength
-  put length(tRand) into tRandLength
+   put length(pString) into tStringLength
+   put length(tRand) into tRandLength
 
-  repeat with i = 1 to tStringLength
-    put rigSubstr(tRand, ((i - 1) mod tRandLength) + 1, 1) & (numToNativeChar(rigSubstrToNum(tRand, ((i - 1) mod tRandLength) + 1, 1, TRUE) bitXOr rigSubstrToNum(pString, i, 1, TRUE))) after tEnc
-  end repeat
+   repeat with i = 1 to tStringLength
+      put rigSubstr(tRand, ((i - 1) mod tRandLength) + 1, 1) & (numToNativeChar(rigSubstrToNum(tRand, ((i - 1) mod tRandLength) + 1, 1, TRUE) bitXOr rigSubstrToNum(pString, i, 1, TRUE))) after tEnc
+   end repeat
 
-  return _rigXorMerge(tEnc, pKey)
+   return _rigXorMerge(tEnc, pKey)
 end _rigXorEncode
 
 
@@ -437,19 +386,19 @@ end _rigXorEncode
 ----------------------------------------------------------------------*/
 
 private function _rigXorDecode pString pKey
-  local tString, tStringLength, tDec, i, j
+   local tString, tStringLength, tDec, i, j
 
-  put _rigXorMerge(pString, pKey) into tString
+   put _rigXorMerge(pString, pKey) into tString
 
-  put length(tString) into tStringLength
+   put length(tString) into tStringLength
 
-  repeat with i = 1 to tStringLength
-    put i into j
-    add 1 to i
-    put numToNativeChar((rigSubstrToNum(tString, i, 1, TRUE)) bitXOr (rigSubstrToNum(tString, j, 1, TRUE))) after tDec
-  end repeat
+   repeat with i = 1 to tStringLength
+      put i into j
+      add 1 to i
+      put numToNativeChar((rigSubstrToNum(tString, i, 1, TRUE)) bitXOr (rigSubstrToNum(tString, j, 1, TRUE))) after tDec
+   end repeat
 
-  return tDec
+   return tDec
 end _rigXorDecode
 
 
@@ -477,18 +426,18 @@ end _rigXorDecode
 ----------------------------------------------------------------------*/
 
 private function _rigXorMerge pString pKey
-  local tHash, tStringLength, tHashLength, i, tStr
+   local tHash, tStringLength, tHashLength, i, tStr
 
-  put _rigHash(pKey) into tHash
+   put _rigHash(pKey) into tHash
 
-  put length(pString) into tStringLength
-  put length(tHash) into tHashLength
+   put length(pString) into tStringLength
+   put length(tHash) into tHashLength
 
-  repeat with i = 1 to tStringLength
-    put numToNativeChar((rigSubstrToNum(pString, i, 1, TRUE)) bitXOr (rigSubstrToNum(tHash, ((i - 1) mod tHashLength) + 1, 1, TRUE))) after tStr
-  end repeat
+   repeat with i = 1 to tStringLength
+      put numToNativeChar((rigSubstrToNum(pString, i, 1, TRUE)) bitXOr (rigSubstrToNum(tHash, ((i - 1) mod tHashLength) + 1, 1, TRUE))) after tStr
+   end repeat
 
-  return tStr
+   return tStr
 end _rigXorMerge
 
 
@@ -513,8 +462,8 @@ end _rigXorMerge
 ----------------------------------------------------------------------*/
 
 command rigSetCipher pName pKeyLength
-  put pName into sEncryptA["cipher"]
-  put pKeyLength into sEncryptA["cipherKeyLength"]
+   put pName into sEncryptA["cipher"]
+   put pKeyLength into sEncryptA["cipherKeyLength"]
 end rigSetCipher
 
 
@@ -532,36 +481,36 @@ end rigSetCipher
 --|
 --| Summary: Set the hash type.
 --|
---| Format:  rigSetHash param1
+--| Format:  rigSetHash [param1]
 --|
---| Parameters: string <pType>
+--| Parameters: string <pType> (optional)
 --|
 --| Return: empty
 ----------------------------------------------------------------------*/
 
 command rigSetHash pType
-  local tType
+   local tType
 
-  if (pType is empty) or (pType is not among the items of "SHA-1,SHA-224,SHA-256,SHA-384,SHA-512,SHA3-224,SHA3-256,SHA3-384,SHA3-512") then
-    # DEFAULT HASH TYPE -- used for backwards compatibility
-    put "SHA-1" into tType
-  else
-    put pType into tType
-  end if
+   if (pType is empty) or (pType is not among the items of "SHA-1,SHA-224,SHA-256,SHA-384,SHA-512,SHA3-224,SHA3-256,SHA3-384,SHA3-512") then
+      # DEFAULT HASH TYPE -- used for backwards compatibility
+      put "SHA-1" into tType
+   else
+      put pType into tType
+   end if
 
-  set the itemdel to "."
+   set the itemdel to "."
 
-  if (item 1 of the version < 9) then
-    if (tType is not "SHA-1") and (tType is not "md5") then
-      put "SHA-1" into sEncryptA["_hashType"]
-    else
+   if (item 1 of the version < 9) then
+      if (tType is not "SHA-1") and (tType is not "md5") then
+         put "SHA-1" into sEncryptA["_hashType"]
+      else
+         put tType into sEncryptA["_hashType"]
+      end if
+
+   else
+      # LC VERSION 9_0_0_dp_7 AND UP
       put tType into sEncryptA["_hashType"]
-    end if
-
-  else
-    # LC VERSION 9_0_0_dp_7 AND UP
-    put tType into sEncryptA["_hashType"]
-  end if
+   end if
 end rigSetHash
 
 
@@ -590,28 +539,28 @@ end rigSetHash
 ----------------------------------------------------------------------*/
 
 private function _rigHash pStr
-  local tHash
+   local tHash
 
-  if sEncryptA["_hashType"] is empty then
-    rigSetHash
-  end if
+   if sEncryptA["_hashType"] is empty then
+      rigSetHash
+   end if
 
-  set the itemdel to "."
+   set the itemdel to "."
 
-  if (item 1 of the version < 9) then
-    if sEncryptA["_hashType"] is "SHA-1" then
-      put sha1Digest(pStr) into tHash
-    else
+   if (item 1 of the version < 9) then
+      if sEncryptA["_hashType"] is "SHA-1" then
+         put sha1Digest(pStr) into tHash
+      else
 
-      put rigHexDigest(pStr) into tHash
-    end if
+         put rigHexDigest(pStr) into tHash
+      end if
 
-  else
-    # LC VERSION 9_0_0_dp_7 AND UP
-    put messageDigest(pStr, sEncryptA["_hashType"]) into tHash
-  end if
+   else
+      # LC VERSION 9_0_0_dp_7 AND UP
+      put messageDigest(pStr, sEncryptA["_hashType"]) into tHash
+   end if
 
-  return tHash
+   return tHash
 end _rigHash
 
 
@@ -638,11 +587,11 @@ end _rigHash
 ----------------------------------------------------------------------*/
 
 function rigEncryptGet pWhat
-  if pWhat is among the keys of sEncryptA then
-    return sEncryptA[pWhat]
-  end if
+   if pWhat is among the keys of sEncryptA then
+      return sEncryptA[pWhat]
+   end if
 
-  return empty
+   return empty
 end rigEncryptGet
 
 
@@ -668,9 +617,9 @@ end rigEncryptGet
 ----------------------------------------------------------------------*/
 
 command rigEncryptSet pKey pVal
-  if pKey is among the keys of sEncryptA then
-    put pVal into sEncryptA[pKey]
-  end if
+   if pKey is among the keys of sEncryptA then
+      put pVal into sEncryptA[pKey]
+   end if
 end rigEncryptSet
 
 
@@ -705,19 +654,19 @@ end rigEncryptSet
 ----------------------------------------------------------------------*/
 
 function rigHexDigest pStr
-  local tDigestStr, tBinDecodetDigestStr
+   local tDigestStr, tBinDecodetDigestStr
 
-  set the itemDel to "."
+   set the itemDel to "."
 
-  if item 1 of the version < 9 then
-    put md5digest(pStr) into tDigestStr
-  else
-    put messageDigest(pStr, "SHA3-256") into tDigestStr
-  end if
+   if item 1 of the version < 9 then
+      put md5digest(pStr) into tDigestStr
+   else
+      put messageDigest(pStr, "SHA3-256") into tDigestStr
+   end if
 
-  get binarydecode("H*",tDigestStr,tBinDecodetDigestStr)
+   get binarydecode("H*",tDigestStr,tBinDecodetDigestStr)
 
-  return tBinDecodetDigestStr
+   return tBinDecodetDigestStr
 end rigHexDigest
 
 
@@ -744,25 +693,25 @@ end rigHexDigest
 ----------------------------------------------------------------------*/
 
 function rigRandomNum
-  local tRandomNum, tCounter, tSeed, tUpperLimit, tLowerLimit
+   local tRandomNum, tCounter, tSeed, tUpperLimit, tLowerLimit
 
-  put "" into tRandomNum
+   put "" into tRandomNum
 
-  put 2147483647 into tUpperLimit
-  put 0 into tLowerLimit
+   put 2147483647 into tUpperLimit
+   put 0 into tLowerLimit
 
-  put 1 into tCounter
+   put 1 into tCounter
 
-  repeat while (the length of tRandomNum) < 32
-    put (char -8 to -1 of the millisecs) + tCounter into tSeed
-    set the randomSeed to tSeed
+   repeat while (the length of tRandomNum) < 32
+      put (char -8 to -1 of the millisecs) + tCounter into tSeed
+      set the randomSeed to tSeed
 
-    put random(tUpperLimit - tLowerLimit + 1) + tLowerLimit -1 after tRandomNum
+      put random(tUpperLimit - tLowerLimit + 1) + tLowerLimit -1 after tRandomNum
 
-    add 1 to tCounter
-  end repeat
+      add 1 to tCounter
+   end repeat
 
-  return tRandomNum
+   return tRandomNum
 end rigRandomNum
 
 
@@ -788,10 +737,10 @@ end rigRandomNum
 ----------------------------------------------------------------------*/
 
 function rigSubstr pString pStart pLength
-  local tLastChar
+   local tLastChar
 
-  put pStart + (pLength - 1) into tLastChar
-  return char pStart to tLastChar of pString
+   put pStart + (pLength - 1) into tLastChar
+   return char pStart to tLastChar of pString
 end rigSubstr
 
 
@@ -821,20 +770,20 @@ end rigSubstr
 ----------------------------------------------------------------------*/
 
 function rigSubstrToNum pString pStart pLength pNative
-  local tLastChar, tStr, tSubstr
+   local tLastChar, tStr, tSubstr
 
-  put pStart + (pLength - 1) into tLastChar
-  put char pStart to tLastChar of pString into tStr
+   put pStart + (pLength - 1) into tLastChar
+   put char pStart to tLastChar of pString into tStr
 
-  repeat for each char thisChar in tStr
-    if pNative then
-      put nativeCharToNum(thisChar) after tSubstr
-    else
-      put codepointToNum(thisChar) after tSubstr
-    end if
-  end repeat
+   repeat for each char thisChar in tStr
+      if pNative then
+         put nativeCharToNum(thisChar) after tSubstr
+      else
+         put codepointToNum(thisChar) after tSubstr
+      end if
+   end repeat
 
-  return tSubstr
+   return tSubstr
 end rigSubstrToNum
 
 
