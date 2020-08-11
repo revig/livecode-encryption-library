@@ -6,7 +6,7 @@ script "encryptLib"
 --
 -- library of encryption handlers and functions based on revIgniter 2.1.7
 --
--- ¬¨¬©2020 revIgniter.com
+-- @2020 revIgniter.com
 --
 -- Version 1.0.0
 --
